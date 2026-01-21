@@ -10,13 +10,8 @@ def test_maneuvers():
     print("\nInitial States:")
     for i, target in enumerate(manager.targets):
         state = target[0].state_vector
-        # Check logic based on dimension
-        # 6D: x, vx, y, vy, z, vz
         # 9D: x, vx, ax, y, vy, ay, z, vz, az
-        if state.shape[0] == 9:
-            vel = np.array([state[1, 0], state[4, 0], state[7, 0]])
-        else:
-            vel = np.array([state[1, 0], state[3, 0], state[5, 0]])
+        vel = np.array([state[1, 0], state[4, 0], state[7, 0]])
             
         speed =  np.linalg.norm(vel)
         print(f"Target {i} ({target.category.value}): Speed={speed.item():.2f} m/s, RCS={target.rcs:.2f}, Dim={state.shape[0]}")
@@ -32,15 +27,10 @@ def test_maneuvers():
         state_vec = target[-1].state_vector
         initial_vec = target[0].state_vector
         
-        # Position extraction
-        if state_vec.shape[0] == 9:
-            pos = np.array([state_vec[0, 0], state_vec[3, 0], state_vec[6, 0]])
-            vel = np.array([state_vec[1, 0], state_vec[4, 0], state_vec[7, 0]])
-            initial_pos = np.array([initial_vec[0, 0], initial_vec[3, 0], initial_vec[6, 0]])
-        else:
-            pos = np.array([state_vec[0, 0], state_vec[2, 0], state_vec[4, 0]])
-            vel = np.array([state_vec[1, 0], state_vec[3, 0], state_vec[5, 0]])
-            initial_pos = np.array([initial_vec[0, 0], initial_vec[2, 0], initial_vec[4, 0]])
+        # Position extraction (9D simplified)
+        pos = np.array([state_vec[0, 0], state_vec[3, 0], state_vec[6, 0]])
+        vel = np.array([state_vec[1, 0], state_vec[4, 0], state_vec[7, 0]])
+        initial_pos = np.array([initial_vec[0, 0], initial_vec[3, 0], initial_vec[6, 0]])
 
         speed = np.linalg.norm(vel)
         # Check if it moved
@@ -61,23 +51,22 @@ def test_maneuvers():
     ax.set_ylabel("Y (m)")
     ax.set_zlabel("Z (m)")
 
-    colors = {TargetCategory.COMMERCIAL: 'blue', TargetCategory.FIGHTER: 'red', TargetCategory.DRONE: 'green'}
+    colors = {
+        TargetCategory.COMMERCIAL: 'blue', 
+        TargetCategory.FIGHTER: 'red', 
+        TargetCategory.DRONE: 'green',
+        TargetCategory.CRUISE_MISSILE: 'purple',
+        TargetCategory.BALLISTIC_MISSILE: 'orange'
+    }
 
     for path in manager.targets:
         xs, ys, zs = [], [], []
-        # Check dimension for entire path (assume constant dim per target)
-        is_9d = path[0].state_vector.shape[0] == 9
         
         for s in path:
             sv = s.state_vector
-            if is_9d:
-                xs.append(sv[0, 0])
-                ys.append(sv[3, 0])
-                zs.append(sv[6, 0])
-            else:
-                xs.append(sv[0, 0])
-                ys.append(sv[2, 0])
-                zs.append(sv[4, 0])
+            xs.append(sv[0, 0])
+            ys.append(sv[3, 0])
+            zs.append(sv[6, 0])
         
         c = colors.get(path.category, 'black')
         label = path.category.value if path.category.value not in [l.get_label() for l in ax.get_lines()] else ""
