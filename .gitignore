@@ -1,0 +1,5 @@
+dataset/*
+*.pyc
+launch.json
+*.pkl
+*.txt
