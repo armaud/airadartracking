@@ -237,31 +237,25 @@ class ManeuveringTargetManager:
             # Altitude
             if category == TargetCategory.DRONE:
                 z = np.random.uniform(100, 1000)
-            elif category == TargetCategory.CRUISE_MISSILE:
-                z = np.random.uniform(100, 500) # Low altitude
-            elif category == TargetCategory.BALLISTIC_MISSILE:
-                z = np.random.uniform(300000, 700000) # High altitude launch/re-entry
-            elif category == TargetCategory.FIGHTER:
-                z = np.random.uniform(3000, 12000)
-            else: # Commercial
-                z = np.random.uniform(8000, 12000)
-
-            # Speed and RCS
-            if category == TargetCategory.COMMERCIAL:
-                speed = np.random.uniform(200, 280) 
-                rcs = np.random.uniform(10, 50)
-            elif category == TargetCategory.FIGHTER:
-                speed = np.random.uniform(300, 600) 
-                rcs = np.random.uniform(1, 5)
-            elif category == TargetCategory.DRONE:
                 speed = np.random.uniform(20, 50) 
                 rcs = np.random.uniform(0.1, 1)
             elif category == TargetCategory.CRUISE_MISSILE:
+                z = np.random.uniform(100, 500) # Low altitude
                 speed = np.random.uniform(250, 350) 
                 rcs = np.random.uniform(0.5, 2)
-            else: # Ballistic Missile
+            elif category == TargetCategory.BALLISTIC_MISSILE:
+                z = np.random.uniform(300000, 700000) # High altitude launch/re-entry
                 speed = np.random.uniform(800, 1500) 
                 rcs = np.random.uniform(1, 10)
+            elif category == TargetCategory.FIGHTER:
+                z = np.random.uniform(3000, 12000)
+                speed = np.random.uniform(300, 600) 
+                rcs = np.random.uniform(1, 5)
+            else: # Commercial
+                z = np.random.uniform(8000, 12000)
+                speed = np.random.uniform(200, 280) 
+                rcs = np.random.uniform(10, 50)
+                
 
             # Velocity components
             heading = np.random.uniform(0, 2 * np.pi)

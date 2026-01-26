@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import pickle
 import numpy as np
 from maneuvering_target_sim import ManeuveringTargetManager, TargetCategory
 
 def test_maneuvers():
     start_time = datetime.now()
-    manager = ManeuveringTargetManager(start_time, n_targets=5)
+    manager = ManeuveringTargetManager(start_time, n_targets=1)
     
     print("\nInitial States:")
     for i, target in enumerate(manager.targets):
@@ -16,9 +16,17 @@ def test_maneuvers():
         speed =  np.linalg.norm(vel)
         print(f"Target {i} ({target.category.value}): Speed={speed.item():.2f} m/s, RCS={target.rcs:.2f}, Dim={state.shape[0]}")
 
-    print("\nSimulating 120 steps...")
+    # Simulation Params
+    duration = 120 # seconds
+    dt = 1.0 # seconds
+    
+    # Update manager timestep if needed, though it defaults to 1s
+    manager.timestep = timedelta(seconds=dt)
+    
+    print(f"\nSimulating {duration} seconds with dt={dt}...")
     current_time = start_time
-    for step in range(120):
+    steps = int(duration / dt)
+    for step in range(steps):
         current_time = start_time + (step + 1) * manager.timestep
         manager.move_targets(current_time)
         
@@ -88,8 +96,19 @@ def test_maneuvers():
 
     # Save tracks to file
     pkl_filename = f'dataset/ground_truth_{timestamp}.pkl'
+    
+    data = {
+        'metadata': {
+            'duration': duration,
+            'dt': dt,
+            'start_time': start_time,
+            'n_targets': manager.n_targets
+        },
+        'ground_truth': manager.targets
+    }
+    
     with open(pkl_filename, 'wb') as f:
-        pickle.dump(manager.targets, f)
+        pickle.dump(data, f)
     print(f"Ground truth tracks saved to {pkl_filename}")
 
 if __name__ == "__main__":
