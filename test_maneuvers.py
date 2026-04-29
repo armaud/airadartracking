@@ -3,18 +3,18 @@ import pickle
 import numpy as np
 from maneuvering_target_sim import ManeuveringTargetManager, TargetCategory
 
-def test_maneuvers():
+def test_maneuvers(idx=1, num_targets = 1, type="Train", do_plot = False):
     start_time = datetime.now()
-    manager = ManeuveringTargetManager(start_time, n_targets=1)
+    manager = ManeuveringTargetManager(start_time, n_targets=num_targets)
     
-    print("\nInitial States:")
+    # print("\nInitial States:")
     for i, target in enumerate(manager.targets):
         state = target[0].state_vector
         # 9D: x, vx, ax, y, vy, ay, z, vz, az
         vel = np.array([state[1, 0], state[4, 0], state[7, 0]])
             
         speed =  np.linalg.norm(vel)
-        print(f"Target {i} ({target.category.value}): Speed={speed.item():.2f} m/s, RCS={target.rcs:.2f}, Dim={state.shape[0]}")
+        # print(f"Target {i} ({target.category.value}): Speed={speed.item():.2f} m/s, RCS={target.rcs:.2f}, Dim={state.shape[0]}")
 
     # Simulation Params
     duration = 120 # seconds
@@ -23,14 +23,14 @@ def test_maneuvers():
     # Update manager timestep if needed, though it defaults to 1s
     manager.timestep = timedelta(seconds=dt)
     
-    print(f"\nSimulating {duration} seconds with dt={dt}...")
+    # print(f"\nSimulating {duration} seconds with dt={dt}...")
     current_time = start_time
     steps = int(duration / dt)
     for step in range(steps):
         current_time = start_time + (step + 1) * manager.timestep
         manager.move_targets(current_time)
         
-    print("\nFinal States:")
+    # print("\nFinal States:")
     for i, target in enumerate(manager.targets):
         state_vec = target[-1].state_vector
         initial_vec = target[0].state_vector
@@ -43,59 +43,60 @@ def test_maneuvers():
         speed = np.linalg.norm(vel)
         # Check if it moved
         dist = np.linalg.norm(pos - initial_pos)
-        print(f"Target {i}: Speed={speed.item():.2f} m/s, Dist Moved={dist.item():.2f} m")
+        # print(f"Target {i}: Speed={speed.item():.2f} m/s, Dist Moved={dist.item():.2f} m")
 
     # Plotting
-    import matplotlib.pyplot as plt
-    try:
-        from mpl_toolkits.mplot3d import Axes3D
-    except ImportError:
-        pass # Recent matplotlib versions don't need this explicit import usually
+    if do_plot:
+        import matplotlib.pyplot as plt
+        try:
+            from mpl_toolkits.mplot3d import Axes3D
+        except ImportError:
+            pass # Recent matplotlib versions don't need this explicit import usually
 
-    fig = plt.figure(figsize=(10, 8))
-    ax = fig.add_subplot(111, projection='3d')
-    ax.set_title("Target Trajectories")
-    ax.set_xlabel("X (m)")
-    ax.set_ylabel("Y (m)")
-    ax.set_zlabel("Z (m)")
+        fig = plt.figure(figsize=(10, 8))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.set_title("Target Trajectories")
+        ax.set_xlabel("X (m)")
+        ax.set_ylabel("Y (m)")
+        ax.set_zlabel("Z (m)")
 
-    colors = {
-        TargetCategory.COMMERCIAL: 'blue', 
-        TargetCategory.FIGHTER: 'red', 
-        TargetCategory.DRONE: 'green',
-        TargetCategory.CRUISE_MISSILE: 'purple',
-        TargetCategory.BALLISTIC_MISSILE: 'orange'
-    }
+        colors = {
+            TargetCategory.COMMERCIAL: 'blue', 
+            TargetCategory.FIGHTER: 'red', 
+            TargetCategory.DRONE: 'green',
+            TargetCategory.CRUISE_MISSILE: 'purple',
+            TargetCategory.BALLISTIC_MISSILE: 'orange'
+        }
 
-    for path in manager.targets:
-        xs, ys, zs = [], [], []
+        for path in manager.targets:
+            xs, ys, zs = [], [], []
+            
+            for s in path:
+                sv = s.state_vector
+                xs.append(sv[0, 0])
+                ys.append(sv[3, 0])
+                zs.append(sv[6, 0])
+            
+            c = colors.get(path.category, 'black')
+            label = path.category.value if path.category.value not in [l.get_label() for l in ax.get_lines()] else ""
+            
+            ax.plot(xs, ys, zs, color=c, label=label)
+            ax.scatter(xs[-1], ys[-1], zs[-1], color=c, marker='x') # End point
+            ax.scatter(xs[0], ys[0], zs[0], color=c, marker='o') # Start point
+
+        ax.legend()
+        plt.tight_layout()
         
-        for s in path:
-            sv = s.state_vector
-            xs.append(sv[0, 0])
-            ys.append(sv[3, 0])
-            zs.append(sv[6, 0])
+        # Generate timestamp for both files
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
-        c = colors.get(path.category, 'black')
-        label = path.category.value if path.category.value not in [l.get_label() for l in ax.get_lines()] else ""
-        
-        ax.plot(xs, ys, zs, color=c, label=label)
-        ax.scatter(xs[-1], ys[-1], zs[-1], color=c, marker='x') # End point
-        ax.scatter(xs[0], ys[0], zs[0], color=c, marker='o') # Start point
-
-    ax.legend()
-    plt.tight_layout()
-    
-    # Generate timestamp for both files
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    # Save Plot
-    plot_filename = f'dataset/maneuver_test_{timestamp}.png'
-    plt.savefig(plot_filename)
-    print(f"Plot saved to {plot_filename}")
+        # Save Plot
+        plot_filename = f'dataset/{type}/maneuver_{idx}.png'
+        plt.savefig(plot_filename)
+        print(f"Plot saved to {plot_filename}")
 
     # Save tracks to file
-    pkl_filename = f'dataset/ground_truth_{timestamp}.pkl'
+    pkl_filename = f'dataset/{type}/ground_truth_{idx}.pkl'
     
     data = {
         'metadata': {
