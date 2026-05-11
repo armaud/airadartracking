@@ -6,6 +6,8 @@ from stonesoup.base import Property
 
 from stonesoup.models.base import ReversibleModel
 
+# For initial testing, use stonesoup measurement and radar models
+# Later will use the models defined below allowing more control
 class RadarMeasurementModel(MeasurementModel, ReversibleModel):
     """
     Non-linear measurement model for [Range, Azimuth, Elevation, RangeRate]
@@ -189,7 +191,15 @@ class RadarEmulator:
         # state = target.state_at(current_time)
         state = target[-1]
         
-        x, vx, y, vy, z, vz = state.state_vector.flatten()
+        sv = state.state_vector
+        if sv.shape[0] == 9:
+             # 9D: x, vx, ax, y, vy, ay, z, vz, az
+             x, vx = sv[0, 0], sv[1, 0]
+             y, vy = sv[3, 0], sv[4, 0]
+             z, vz = sv[6, 0], sv[7, 0]
+        else:
+             # Assume 6D: x, vx, y, vy, z, vz
+             x, vx, y, vy, z, vz = sv.flatten()
         
         r = np.sqrt(x**2 + y**2 + z**2)
         
@@ -244,7 +254,7 @@ class RadarEmulator:
         rd_map_complex = noise_real + 1j * noise_imag
 
         ########################################
-        # rd_map_complex = 0*rd_map_complex
+        rd_map_complex = 0*rd_map_complex
         #######################################
         for target in targets:
             r, _, _, vr = self._get_target_state(target, current_time)
