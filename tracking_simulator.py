@@ -2,7 +2,7 @@ import argparse
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d import Axes3D
 from datetime import datetime, timedelta
 
 from maneuvering_target_sim import ManeuveringTargetManager
@@ -12,7 +12,7 @@ from tracker_gnn import TrackerManager
 # from tracker_jpdaf import TrackerManager
 from stonesoup.plotter import Plotter, Dimension
 from stonesoup.types.groundtruth import GroundTruthState
-from ospa_metrics import compute_ospa_metric
+# from ospa_metrics import compute_ospa_metric
 from stonesoup.metricgenerator.ospametric import OSPAMetric
 from stonesoup.measures import Euclidean
 
@@ -107,11 +107,6 @@ def main():
             ground_truth_step = []
             for path in ground_truth_loaded:
                 if i < len(path):
-                    # We might need to construct a mini-path or just pass the state
-                    # radar_sim expects a list of paths or state that has .state_vector
-                    # Actually radar_sim._get_target_state takes 'target' which is a path or state?
-                    # It calls target[-1] or target.state_at.
-                    # Let's create a temporary path with just the current state to satisfy radar_sim interface
                     cpstate = path[i]
                     cpstate.rcs = path.rcs
                     cp3statev = cpstate.state_vector[[0,1,3,4,6,7],:]
