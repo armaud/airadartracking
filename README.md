@@ -1,6 +1,17 @@
 # Multi-Target tracking simulation
 
+## Configure environment
+```bash
+uv sync
+```
+
 ## Generating dataset
+Create relevant folders in root directory
+```bash
+mkdir dataset
+mkdir dataset/Train
+mkdir dataset/Test
+```
 Create dataset in multiple pickle files. This format is useful for testing classical tracking algorithms.
 ```python
 python create_dataset.py
